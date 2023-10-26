@@ -8,6 +8,7 @@ using Simbir.GoAPI.Services.Identity;
 using System.Data;
 using Simbir.GoAPI.Models;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 
 namespace Simbir.GoAPI.Controllers;
 
@@ -33,10 +34,10 @@ public class RentController : ControllerBase
     public IActionResult GetAvailableTransport([FromQuery] RentSearchRequest parameters)
     {
         var availableTransport = _context.Transports
-            .Where(t => t.CanBeRented &&
-                        (parameters.Type == "All" || t.TransportType == parameters.Type) &&
-                        CalculateDistance(parameters.Latitude, parameters.Longitude, t.Latitude, t.Longitude) <= parameters.Radius)
-            .ToList();
+               .Where(t => t.CanBeRented && (parameters.Type == "All" || t.TransportType == parameters.Type))
+               .AsEnumerable()
+               .Where(t => CalculateDistance(parameters.Latitude, parameters.Longitude, t.Latitude, t.Longitude) <= parameters.Radius)
+               .ToList();
 
         return Ok(availableTransport);
     }
@@ -137,6 +138,11 @@ public class RentController : ControllerBase
             return BadRequest("You cannot rent your own transport");
         }
 
+        if (!transport.CanBeRented)
+        {
+            return BadRequest("Transport alerady rented");
+        }
+
         double pricePerUnit;
         if (rentType == "Minutes")
         {
@@ -161,6 +167,7 @@ public class RentController : ControllerBase
             FinalPrice = null
         };
 
+        transport.CanBeRented = false;
         _context.Rents.Add(rent);
         await _context.SaveChangesAsync();
 
@@ -212,7 +219,7 @@ public class RentController : ControllerBase
 
 
 
-        DateTime startTime = DateTime.Parse(rent.TimeStart);
+        DateTime startTime = DateTime.Parse(rent.TimeStart, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
         DateTime endTime = DateTime.UtcNow;
 
         TimeSpan duration = endTime - startTime;
@@ -235,6 +242,7 @@ public class RentController : ControllerBase
 
         transport.Latitude = lat;
         transport.Longitude = lon;
+        transport.CanBeRented = true;
 
         await _context.SaveChangesAsync();
 

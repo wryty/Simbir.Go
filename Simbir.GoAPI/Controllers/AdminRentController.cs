@@ -7,6 +7,7 @@ using Simbir.GoAPI.Models.Identity;
 using Simbir.GoAPI.Services.Identity;
 using System.Data;
 using Simbir.GoAPI.Models;
+using System.Globalization;
 
 namespace Simbir.GoAPI.Controllers;
 
@@ -81,6 +82,11 @@ public class AdminRentController : ControllerBase
             return BadRequest("Invalid end time");
         }
 
+        if (!transport.CanBeRented)
+        {
+            return BadRequest("Transport alerady rented");
+        }
+
         var newRent = new Rent
         {
             TransportId = request.TransportId,
@@ -92,6 +98,7 @@ public class AdminRentController : ControllerBase
             FinalPrice = request.FinalPrice
         };
 
+        transport.CanBeRented = false;
         _context.Rents.Add(newRent);
         await _context.SaveChangesAsync();
 
@@ -131,7 +138,7 @@ public class AdminRentController : ControllerBase
 
 
 
-        DateTime startTime = DateTime.Parse(rent.TimeStart);
+        DateTime startTime = DateTime.Parse(rent.TimeStart, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
         DateTime endTime = DateTime.UtcNow;
 
         TimeSpan duration = endTime - startTime;
@@ -154,6 +161,8 @@ public class AdminRentController : ControllerBase
 
         transport.Latitude = lat;
         transport.Longitude = lon;
+        transport.CanBeRented = true;
+
 
         await _context.SaveChangesAsync();
 

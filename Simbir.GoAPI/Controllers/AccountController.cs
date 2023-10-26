@@ -193,7 +193,7 @@ public class AccountsController : ControllerBase
     [HttpPost("Update")]
     public async Task<IActionResult> UpdateAccount([FromBody] UpdateRequest request)
     {
-        var user = await _userManager.FindByNameAsync(User.Identity.Name);
+        var user = await _userManager.GetUserAsync(User);
 
         if (user == null)
         {
