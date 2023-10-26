@@ -3,7 +3,7 @@
 
 
 ## URL(debug): http://localhost:5224/api/swagger/index.html
-## URL(release): http://localhost:5432/api/swagger/index.html
+## URL(binary): http://localhost:5000/api/swagger/index.html
 
 
 Заметьте, что в appsettings.json необходимо указать действущий сервер в Postgres, правильное имя пользователя и пароль, а так же порт, на котором находится ваш сервер (для создания и применения миграций). По желанию можно сконфигурировать название создаваемой БД.
